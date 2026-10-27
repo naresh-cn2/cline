@@ -145,7 +145,7 @@ const main = () => {
 	const repo =
 		getArgValue(args, "--repo") ??
 		process.env.GITHUB_REPOSITORY ??
-		"cline/cline";
+		"naresh-cn2/cline";
 	const notesFile = getArgValue(args, "--notes-file");
 
 	if (!version || !tag || !dir || !out) {
@@ -156,7 +156,7 @@ const main = () => {
 
 	const notes = notesFile
 		? readFileSync(notesFile, "utf8").trim()
-		: `Cline v${version}`;
+		: `OPEN-VERSE v${version}`;
 
 	const manifest = buildUpdateManifest({
 		version,

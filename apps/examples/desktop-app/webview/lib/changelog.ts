@@ -15,14 +15,14 @@ export type ChangelogResponse = {
 };
 
 const CHANGELOG_URL = "/api/changelog";
-const REPO_URL = "https://github.com/cline/cline";
+const REPO_URL = "https://github.com/naresh-cn2/OPEN-VERSE";
 
 /** Desktop releases are tagged `desktop-vX.Y.Z` (see publish-desktop). */
 export function releaseUrl(version: string): string {
 	return `${REPO_URL}/releases/tag/desktop-v${version}`;
 }
 
-export const CHANGELOG_URL_ON_GITHUB = `${REPO_URL}/blob/main/apps/examples/desktop-app/CHANGELOG.md`;
+export const CHANGELOG_URL_ON_GITHUB = `${REPO_URL}/blob/main/cline/apps/examples/desktop-app/CHANGELOG.md`;
 export const ISSUES_URL = `${REPO_URL}/issues/new/choose`;
 
 /**

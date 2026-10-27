@@ -19,7 +19,7 @@
 	"plugins": {
 		"updater": {
 			"endpoints": [
-				"https://github.com/cline/cline/releases/download/desktop-beta/latest.json"
+				"https://github.com/naresh-cn2/cline/releases/download/desktop-beta/latest.json"
 			]
 		}
 	}

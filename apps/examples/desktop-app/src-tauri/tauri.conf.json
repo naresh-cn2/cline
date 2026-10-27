@@ -1,8 +1,8 @@
 {
 	"$schema": "https://schema.tauri.app/config/2",
-	"productName": "Cline",
+	"productName": "OPEN-VERSE",
 	"version": "0.0.49",
-	"identifier": "bot.cline.app",
+	"identifier": "ai.openverse.desktop",
 	"build": {
 		"beforeDevCommand": "bun run build:runtime && bun run dev:web",
 		"devUrl": "http://localhost:3125",
@@ -11,9 +11,9 @@
 	},
 	"plugins": {
 		"updater": {
-			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENEMTJDNzk2RUExQUY3RDEKUldUUjl4cnFsc2NTelYxNzlFR1NkWnI0VTM1V0hvQXRyOW0xV2c0bFhkL3dhdkdpNGhNRW1MQXEK",
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlCM0M4QzlCOEI3QjExRjYKUldUMkVYdUxtNHc4bTlMSVlMVHJpZ3dtMVBEdzgySlR1UjhJOWliMDRPWG5TUU8xR3h5MWpJWFAK",
 			"endpoints": [
-				"https://github.com/cline/cline/releases/download/desktop-latest/latest.json"
+				"https://github.com/naresh-cn2/cline/releases/download/desktop-latest/latest.json"
 			]
 		}
 	},
@@ -21,7 +21,7 @@
 		"windows": [
 			{
 				"label": "main",
-				"title": "Cline",
+				"title": "OPEN-VERSE",
 				"width": 1500,
 				"height": 980,
 				"resizable": true,
@@ -38,9 +38,9 @@
 		"active": true,
 		"targets": "all",
 		"category": "DeveloperTool",
-		"shortDescription": "Cline AI coding agent",
-		"longDescription": "Cline is an AI coding agent. It reads your code, edits files, runs commands, and works through tasks with you in any project on your machine.",
-		"homepage": "https://cline.bot",
+		"shortDescription": "OPEN-VERSE AI coding assistant",
+		"longDescription": "OPEN-VERSE is an autonomous AI coding assistant. It reads your code, edits files, runs commands, and works through tasks with you in any project on your machine.",
+		"homepage": "https://open-verse-website.vercel.app",
 		"externalBin": ["bin/cline-cli"],
 		"resources": [
 			"icons/app/*.png",

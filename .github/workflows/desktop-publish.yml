@@ -41,7 +41,7 @@ jobs:
   validate:
     name: Validate release tag
     if: |
-      github.repository == 'cline/cline' &&
+      github.repository == 'naresh-cn2/cline' &&
       github.ref == 'refs/heads/main' &&
       github.event.inputs.confirm_publish == 'publish' &&
       !endsWith(github.actor, '[bot]')
@@ -125,7 +125,7 @@ jobs:
             echo "ref=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "channel=nightly" >> "$GITHUB_OUTPUT"
-            echo "product=Cline Nightly" >> "$GITHUB_OUTPUT"
+            echo "product=OPEN-VERSE Nightly" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -137,7 +137,7 @@ jobs:
               fi
               ANCESTOR_REF=main
               FEED=desktop-latest
-              PRODUCT="Cline"
+              PRODUCT="OPEN-VERSE"
               ;;
             beta)
               if ! printf "%s\n" "$TAG" | grep -Eq '^desktop-v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$'; then
@@ -146,7 +146,7 @@ jobs:
               fi
               ANCESTOR_REF=desktop-experimental
               FEED=desktop-beta
-              PRODUCT="Cline Beta"
+              PRODUCT="OPEN-VERSE Beta"
               ;;
             *)
               echo "unknown channel: ${CHANNEL}"
@@ -229,37 +229,20 @@ jobs:
       # front instead, before any build work, if the environment is misconfigured.
       - name: Verify PublishDesktop secrets are present
         env:
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          missing=()
-          for name in APPLE_API_ISSUER APPLE_API_KEY APPLE_API_KEY_CONTENT \
-                      APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY \
-                      TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD; do
-            [ -n "${!name}" ] || missing+=("$name")
-          done
-
-          if [ ${#missing[@]} -gt 0 ]; then
-            echo "Missing from the PublishDesktop environment:"
-            printf '  - %s\n' "${missing[@]}"
-            echo
-            echo "Check that every secret above is set on the PublishDesktop"
-            echo "environment and that this job still declares"
-            echo "'environment: PublishDesktop'."
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ] || [ -z "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ]; then
+            echo "Missing required TAURI_SIGNING_PRIVATE_KEY or TAURI_SIGNING_PRIVATE_KEY_PASSWORD in PublishDesktop environment."
             exit 1
           fi
 
-          # Deliberately not phrased as "resolved from PublishDesktop": a
-          # non-empty value here could also be a repository or organization
-          # secret. The repository-scope check in `validate` is what rules that
-          # out.
-          echo "All 8 signing secrets are present."
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "::warning::APPLE_CERTIFICATE not configured; macOS bundle will be built with Minisign updater signature but without Apple Developer ID / notarization."
+          else
+            echo "Apple Developer signing secrets are present."
+          fi
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -319,13 +302,10 @@ jobs:
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
 
       - name: Write App Store Connect API key
+        if: secrets.APPLE_API_KEY_CONTENT != ''
         env:
           APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
         run: |
-          if [ -z "$APPLE_API_KEY_CONTENT" ]; then
-            echo "APPLE_API_KEY_CONTENT secret is not configured"
-            exit 1
-          fi
           printf "%s" "$APPLE_API_KEY_CONTENT" > "$RUNNER_TEMP/AuthKey.p8"
 
       - name: Build, sign, and notarize desktop bundle
@@ -577,33 +557,19 @@ jobs:
         shell: bash
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
-          AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
-          AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_DESKTOP: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_DESKTOP }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          missing=()
-          for name in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID \
-                      AZURE_TRUSTED_SIGNING_ENDPOINT AZURE_TRUSTED_SIGNING_ACCOUNT_NAME \
-                      AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_DESKTOP \
-                      TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD; do
-            [ -n "${!name}" ] || missing+=("$name")
-          done
-
-          if [ ${#missing[@]} -gt 0 ]; then
-            echo "Missing signing secrets for the Windows desktop build:"
-            printf '  - %s\n' "${missing[@]}"
-            echo
-            echo "The AZURE_* names are repository secrets; the TAURI_* names"
-            echo "live in the PublishDesktop environment. Refusing to build an"
-            echo "unsigned Windows desktop release."
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ] || [ -z "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ]; then
+            echo "Missing required TAURI_SIGNING_PRIVATE_KEY or TAURI_SIGNING_PRIVATE_KEY_PASSWORD in PublishDesktop environment."
             exit 1
           fi
 
-          echo "All Windows signing secrets are present."
+          if [ -z "$AZURE_CLIENT_ID" ]; then
+            echo "::warning::AZURE_CLIENT_ID not configured; building Windows NSIS installer without Microsoft Authenticode signing. Tauri Minisign updater signing remains active."
+          else
+            echo "All Windows signing secrets are present."
+          fi
 
       # Every action in this job is SHA-pinned (unlike elsewhere in this
       # file): they run with id-token: write and the updater signing key in
@@ -698,7 +664,10 @@ jobs:
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
 
       - name: Azure login (OIDC)
+        if: env.AZURE_CLIENT_ID != ''
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -707,27 +676,24 @@ jobs:
       # Fetch the Trusted Signing token now, while the GitHub OIDC assertion
       # that azure/login exchanged is still valid; az caches it, so the
       # per-file `az account get-access-token` calls tauri-sign-windows.ps1
-      # makes later are served from that cache. Without this, the first
-      # request for this resource happens after the Rust build, and Entra
-      # rejects the by-then expired assertion once login-to-first-sign
-      # exceeds ~10 minutes (5-minute token lifetime plus 5 minutes of clock
-      # skew). Every Windows job signed within 8.5 minutes until UPX-packing
-      # the remote helpers (#14303) pushed the build past 10 and broke signing
-      # deterministically. Tauri swallows the script's error, so failing here,
-      # with az's real message, is also the diagnostic.
+      # makes later are served from that cache.
       - name: Prime Azure Trusted Signing token
+        if: env.AZURE_CLIENT_ID != ''
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         run: az account get-access-token --resource https://codesigning.azure.net --query expiresOn --output tsv
 
       # Tauri invokes signCommand once per staged binary (main exe, Cline CLI,
-      # NSIS uninstaller, and the installer itself). The overlay is generated
-      # here rather than committed because signCommand needs an absolute path
-      # to the signing script on this runner.
+      # NSIS uninstaller, and the installer itself).
       - name: Write signing config overlay
         shell: bash
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         run: |
-          SCRIPT_PATH="${GITHUB_WORKSPACE//\\//}/apps/examples/desktop-app/scripts/tauri-sign-windows.ps1"
           SIGN_CONF="${RUNNER_TEMP//\\//}/tauri-windows-sign.conf.json"
-          cat > "$SIGN_CONF" <<EOF
+          if [ -n "$AZURE_CLIENT_ID" ]; then
+            SCRIPT_PATH="${GITHUB_WORKSPACE//\\//}/apps/examples/desktop-app/scripts/tauri-sign-windows.ps1"
+            cat > "$SIGN_CONF" <<EOF
           {
             "\$schema": "https://schema.tauri.app/config/2",
             "bundle": {
@@ -737,6 +703,13 @@ jobs:
             }
           }
           EOF
+          else
+            cat > "$SIGN_CONF" <<EOF
+          {
+            "\$schema": "https://schema.tauri.app/config/2"
+          }
+          EOF
+          fi
           cat "$SIGN_CONF"
           echo "SIGN_CONF=${SIGN_CONF}" >> "$GITHUB_ENV"
 
@@ -1321,7 +1294,7 @@ jobs:
         with:
           tag_name: ${{ needs.validate.outputs.tag }}
           target_commitish: ${{ needs.validate.outputs.ref }}
-          name: "Desktop v${{ needs.validate.outputs.version }}"
+          name: "OPEN-VERSE Desktop v${{ needs.validate.outputs.version }}"
           # The repo-wide "latest" release stays owned by CLI releases; the
           # desktop auto-update feed is the rolling desktop-latest release.
           make_latest: "false"
@@ -1362,14 +1335,14 @@ jobs:
           if ! gh release view "$FEED" >/dev/null 2>&1; then
             if [ "$CHANNEL" != "stable" ]; then
               gh release create "$FEED" \
-                --title "Cline desktop ${CHANNEL} (auto-update feed)" \
+                --title "OPEN-VERSE Desktop ${CHANNEL} (auto-update feed)" \
                 --notes "Rolling release backing the ${CHANNEL} desktop app auto-updater. Only ${CHANNEL} installs poll this feed. Do not delete." \
                 --latest=false \
                 --prerelease \
                 --target "$(git rev-parse HEAD)"
             else
               gh release create "$FEED" \
-                --title "Cline desktop (auto-update feed)" \
+                --title "OPEN-VERSE Desktop (auto-update feed)" \
                 --notes "Rolling release backing the desktop app auto-updater. The latest.json asset points at the newest desktop-vX.Y.Z release. Do not delete." \
                 --latest=false \
                 --target "$(git rev-parse HEAD)"
@@ -1383,23 +1356,24 @@ jobs:
           TAG: ${{ needs.validate.outputs.tag }}
           FEED: ${{ needs.validate.outputs.feed }}
         run: |
-          echo "Published Cline desktop v${VERSION}"
+          echo "Published OPEN-VERSE desktop v${VERSION}"
           echo "Release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
           echo "Auto-update feed refreshed: https://github.com/${GITHUB_REPOSITORY}/releases/download/${FEED}/latest.json"
 
       - name: Post release to Slack
+        if: secrets.SLACK_RELEASE_BOT_TOKEN != ''
         uses: slackapi/slack-github-action@v3.0.1
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_RELEASE_BOT_TOKEN }}
           payload: |
             channel: "C0APVKGGZFC"
-            text: "Cline desktop v${{ needs.validate.outputs.version }}${{ needs.validate.outputs.channel == 'beta' && ' (beta)' || '' }}"
+            text: "OPEN-VERSE desktop v${{ needs.validate.outputs.version }}${{ needs.validate.outputs.channel == 'beta' && ' (beta)' || '' }}"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "Cline desktop v${{ needs.validate.outputs.version }}${{ needs.validate.outputs.channel == 'beta' && ' (beta)' || '' }}"
+                  text: "OPEN-VERSE desktop v${{ needs.validate.outputs.version }}${{ needs.validate.outputs.channel == 'beta' && ' (beta)' || '' }}"
               - type: "section"
                 text:
                   type: "mrkdwn"
@@ -1483,6 +1457,7 @@ jobs:
           fi
 
       - name: Post nightly to Slack
+        if: secrets.SLACK_RELEASE_BOT_TOKEN != ''
         uses: slackapi/slack-github-action@v3.0.1
         with:
           method: chat.postMessage
@@ -1490,12 +1465,12 @@ jobs:
           errors: true
           payload: |
             channel: "C0APVKGGZFC"
-            text: "Cline desktop nightly ${{ needs.validate.outputs.version }}"
+            text: "OPEN-VERSE desktop nightly ${{ needs.validate.outputs.version }}"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "*Cline desktop nightly* `${{ needs.validate.outputs.version }}`"
+                  text: "*OPEN-VERSE desktop nightly* `${{ needs.validate.outputs.version }}`"
               - type: "section"
                 text:
                   type: "mrkdwn"
