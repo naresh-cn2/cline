@@ -71,7 +71,7 @@ export function ImportContent() {
 						Import sessions
 					</Button>
 				}
-				description="Bring your conversation history from other coding tools into Cline. Imported sessions show up in your history and can be continued here."
+				description="Bring your conversation history from other coding tools into OPEN VERSE. Imported sessions show up in your history and can be continued here."
 				title="Import"
 			/>
 			<section className="max-w-2xl">

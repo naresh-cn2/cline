@@ -44,7 +44,7 @@ async function loginProviderForDesktop(
 	providerId: string,
 	existing: Parameters<typeof loginLocalProvider>[1],
 	openUrl: (url: string) => void,
-	onUserCode?: (userCode: string) => void,
+	onUserCode?: (userCode: string, url?: string) => void,
 	signal?: AbortSignal,
 ): ReturnType<typeof loginLocalProvider> {
 	if (providerId !== "cline" && providerId !== "cline-pass") {
@@ -52,8 +52,10 @@ async function loginProviderForDesktop(
 	}
 	const device = await startClineDeviceAuth({ signal });
 	signal?.throwIfAborted();
-	onUserCode?.(device.userCode);
-	openUrl(device.verificationUriComplete ?? device.verificationUri);
+	const verificationUrl =
+		device.verificationUriComplete ?? device.verificationUri;
+	onUserCode?.(device.userCode, verificationUrl);
+	openUrl(verificationUrl);
 	return completeClineDeviceAuth({
 		signal,
 		deviceCode: device.deviceCode,
@@ -83,8 +85,8 @@ export async function runCancellableProviderOAuthLogin(
 	openUrl: (url: string) => void,
 	options: {
 		owner?: object;
-		/** Receives the device sign-in confirmation code, when the flow has one. */
-		onUserCode?: (userCode: string) => void;
+		/** Receives the device sign-in confirmation code and URL, when the flow has one. */
+		onUserCode?: (userCode: string, url?: string) => void;
 	} = {},
 	dependencies: OAuthLoginDependencies = defaultDependencies,
 ): Promise<{ provider: string; accessToken: string }> {

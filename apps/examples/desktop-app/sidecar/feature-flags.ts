@@ -275,7 +275,10 @@ export function resetDesktopFeatureFlagsForTesting(): void {
 }
 
 export function readCloudAgentsEnvOverride(): boolean | undefined {
-	const override = process.env.CLINE_CODE_CLOUD_AGENTS?.trim().toLowerCase();
+	const override = (
+		process.env.OPEN_VERSE_CLOUD_AGENTS ??
+		process.env.CLINE_CODE_CLOUD_AGENTS
+	)?.trim().toLowerCase();
 	if (override === "1" || override === "true") return true;
 	if (override === "0" || override === "false") return false;
 	return undefined;
@@ -288,6 +291,11 @@ export function isCloudAgentsEnabled(options?: {
 }): boolean {
 	const override = readCloudAgentsEnvOverride();
 	if (override !== undefined) return override;
+	// When telemetry/PostHog API keys are absent (local development or standalone build),
+	// enable cloud capabilities so genuine Cline Account users can utilize their cloud entitlement.
+	if (!process.env.TELEMETRY_SERVICE_API_KEY) {
+		return true;
+	}
 	return getDesktopFeatureFlagsService(options).getBooleanFlagEnabled(
 		FEATURE_FLAG_CODE_CLOUD_AGENTS,
 	);

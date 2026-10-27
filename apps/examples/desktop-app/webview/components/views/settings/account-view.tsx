@@ -28,7 +28,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAccount } from "@/contexts/account-context";
 import { useClineSignIn } from "@/hooks/use-cline-sign-in";
-import { useOAuthUserCode } from "@/hooks/use-oauth-user-code";
+import { useOAuthDeviceInfo } from "@/hooks/use-oauth-user-code";
 import { isClineAccountNotAuthenticatedResult } from "@/lib/cline-account-state";
 import { desktopClient, openExternalUrl } from "@/lib/desktop-client";
 import { buildModelPickerData } from "@/lib/featured-models";
@@ -331,7 +331,8 @@ export function AccountView() {
 			void refreshAccount();
 		},
 	});
-	const deviceUserCode = useOAuthUserCode(signingIn);
+	const { userCode: deviceUserCode, verificationUrl } =
+		useOAuthDeviceInfo(signingIn);
 
 	const signOut = async () => {
 		setSigningOut(true);
@@ -553,12 +554,29 @@ export function AccountView() {
 					</p>
 				)}
 				{signingIn && deviceUserCode ? (
-					<p className="text-sm text-muted-foreground">
-						Confirm this code in your browser:{" "}
-						<span className="font-mono font-medium text-foreground">
-							{deviceUserCode}
-						</span>
-					</p>
+					<div className="text-sm text-muted-foreground flex flex-col gap-1">
+						<p>
+							Confirm this code in your browser:{" "}
+							<span className="font-mono font-medium text-foreground">
+								{deviceUserCode}
+							</span>
+						</p>
+						{verificationUrl ? (
+							<p className="text-xs">
+								If the browser did not open automatically,{" "}
+								<a
+									href={verificationUrl}
+									target="_blank"
+									rel="noreferrer"
+									className="text-primary underline hover:text-primary/80 inline-flex items-center gap-1"
+								>
+									click here to open the Cline sign-in page
+									<ExternalLink className="size-3" />
+								</a>
+								.
+							</p>
+						) : null}
+					</div>
 				) : null}
 			</div>
 		</div>

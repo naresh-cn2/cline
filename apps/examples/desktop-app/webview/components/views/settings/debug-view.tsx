@@ -11,7 +11,7 @@ export function DebugContent({
 		<PageFrame>
 			<PageHeader
 				title="Debug"
-				description="Tools for troubleshooting Cline."
+				description="Tools for troubleshooting OPEN VERSE."
 			/>
 			<section className="max-w-344">
 				<div className="flex py-4 items-center justify-between gap-5 max-[720px]:flex-col max-[720px]:items-stretch max-[720px]:py-4">

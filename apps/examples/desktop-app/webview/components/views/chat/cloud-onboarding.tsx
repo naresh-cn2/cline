@@ -32,6 +32,8 @@ export function CloudOnboardingCard({
 	cancelling = false,
 	signingIn = false,
 	checking = false,
+	deviceUserCode,
+	verificationUrl,
 }: {
 	variant: CloudOnboardingVariant;
 	onConnect: () => void;
@@ -41,6 +43,8 @@ export function CloudOnboardingCard({
 	cancelling?: boolean;
 	signingIn?: boolean;
 	checking?: boolean;
+	deviceUserCode?: string | null;
+	verificationUrl?: string | null;
 }) {
 	if (variant === "error") {
 		return (
@@ -82,14 +86,14 @@ export function CloudOnboardingCard({
 						</p>
 						<h2 className="mt-3 text-lg font-semibold text-foreground">
 							{isSignedOut
-								? "Run Cline in the cloud"
+								? "Run sessions in the cloud"
 								: isNoRepositories
 									? "Give Cline access to a repository"
 									: "Connect GitHub to get started"}
 						</h2>
 						<p className="mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
-							Cloud sessions run on secure, isolated sandboxes on Cline's
-							infrastructure. Cline clones your repository, works on a branch,
+							Cloud sessions run on secure, isolated sandboxes through your Cline
+							account. The cloud agent clones your repository, works on a branch,
 							and keeps going even when you close the app — check back in from
 							any device.
 						</p>
@@ -159,6 +163,31 @@ export function CloudOnboardingCard({
 							<ExternalLink aria-hidden="true" className="size-3" />
 						</Button>
 					)}
+					{isSignedOut && signingIn && deviceUserCode ? (
+						<div className="w-full text-xs text-muted-foreground mt-2 flex flex-col gap-1.5 p-3 rounded-lg border border-border bg-background/50">
+							<p>
+								Confirm this code in your browser:{" "}
+								<span className="font-mono font-bold text-foreground bg-muted px-2 py-0.5 rounded text-sm tracking-wider">
+									{deviceUserCode}
+								</span>
+							</p>
+							{verificationUrl ? (
+								<p>
+									If the browser window did not open automatically,{" "}
+									<a
+										href={verificationUrl}
+										target="_blank"
+										rel="noreferrer"
+										className="text-primary underline font-medium hover:text-primary/80 inline-flex items-center gap-1"
+									>
+										click here to open the Cline authorization page
+										<ExternalLink aria-hidden="true" className="size-3" />
+									</a>
+									.
+								</p>
+							) : null}
+						</div>
+					) : null}
 					{isSignedOut ? null : (
 						<Button
 							disabled={checking}

@@ -7,8 +7,8 @@ import { HUB_THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
-	title: "Cline",
-	description: "Build software with Cline.",
+	title: "OPEN VERSE",
+	description: "Build software with OPEN VERSE.",
 	icons: {
 		icon: [
 			{
@@ -53,8 +53,20 @@ export default function RootLayout({
 					dangerouslySetInnerHTML={{ __html: HUB_THEME_BOOTSTRAP_SCRIPT }}
 					id="cline-hub-theme-bootstrap"
 				/>
+				{process.env.NEXT_PUBLIC_SIDECAR_WS_ENDPOINT ? (
+					<script
+						// biome-ignore lint/security/noDangerouslySetInnerHtml: dynamic runtime sidecar endpoint injection
+						dangerouslySetInnerHTML={{
+							__html: `window.__SIDECAR_WS_ENDPOINT__ = ${JSON.stringify(process.env.NEXT_PUBLIC_SIDECAR_WS_ENDPOINT)};`,
+						}}
+						id="sidecar-ws-endpoint-bootstrap"
+					/>
+				) : null}
 			</head>
-			<body className="h-full min-h-screen font-sans antialiased">
+			<body
+				className="h-full min-h-screen font-sans antialiased"
+				suppressHydrationWarning
+			>
 				<DesktopErrorTelemetry />
 				<NativeShell />
 				{children}

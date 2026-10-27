@@ -56,16 +56,18 @@ function formatWorkspacePath(path: string): string {
 	const windowsHome = path.match(/^[A-Za-z]:\\Users\\[^\\]+\\(.*)$/);
 	if (windowsHome) {
 		const tail = windowsHome[1]?.replaceAll("\\", "/") || "";
-		return tail ? `~/${tail}` : "~";
+		const remapped = tail.replace(/AppData\/Local\/Cline/i, "AppData/Local/OPEN-VERSE");
+		return remapped ? `~/${remapped}` : "~";
 	}
-	return path;
+	return path.replace(/AppData[/\\]Local[/\\]Cline/i, "AppData/Local/OPEN-VERSE");
 }
 
 function workspaceName(path: string): string {
 	const trimmed = path.trim().replace(/[\\/]+$/, "");
-	if (!trimmed) return "workspace";
+	if (!trimmed) return "OPEN VERSE";
 	const parts = trimmed.split(/[\\/]/);
-	return parts[parts.length - 1] || "workspace";
+	const name = parts[parts.length - 1] || "OPEN VERSE";
+	return name.toLowerCase() === "cline" ? "OPEN VERSE" : name;
 }
 
 const TRIGGER_CLASS =

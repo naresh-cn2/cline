@@ -942,7 +942,7 @@ function GeneralSettingsContent() {
 					<div className="flex flex-col gap-1">
 						<p className="text-base font-semibold text-foreground">App icon</p>
 						<p className="text-sm text-muted-foreground">
-							Pick the icon Cline shows in the {appIconLocation}.
+							Pick the icon OPEN VERSE shows in the {appIconLocation}.
 						</p>
 						{appIconError ? (
 							<p className="mt-2 text-xs text-destructive" role="alert">
@@ -992,7 +992,7 @@ function GeneralSettingsContent() {
 							Keep CLI up to date
 						</p>
 						<p className="text-sm text-muted-foreground">
-							Automatically update the cline terminal command, which shares your
+							Automatically update the openverse terminal command, which shares your
 							sessions and settings with this app. The app itself updates
 							separately.
 						</p>
@@ -1013,7 +1013,7 @@ function GeneralSettingsContent() {
 					<div className="flex flex-col gap-1">
 						<p className="text-base font-semibold text-foreground">Telemetry</p>
 						<p className="text-sm text-muted-foreground">
-							Enable error and usage reports to help improve Cline.
+							Enable error and usage reports to help improve OPEN VERSE.
 						</p>
 						{telemetryError ? (
 							<p className="mt-2 text-xs text-destructive" role="alert">
@@ -1034,7 +1034,7 @@ function GeneralSettingsContent() {
 							New user experience
 						</p>
 						<p className="text-sm text-muted-foreground">
-							Replay the first-run experience new users see when they open Cline
+							Replay the first-run experience new users see when they open OPEN VERSE
 							for the first time.
 						</p>
 					</div>

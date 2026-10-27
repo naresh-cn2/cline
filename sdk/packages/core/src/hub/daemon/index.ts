@@ -588,7 +588,7 @@ async function ensureDetachedHubServerLocked(
 	const rememberIfManaged = (
 		result: DetachedHubResolution,
 	): DetachedHubResolution => {
-		if (!hasExplicitEndpoint) {
+		if (result.authToken) {
 			rememberRecoverableLocalHubUrl(result.url, result.authToken);
 		}
 		return result;

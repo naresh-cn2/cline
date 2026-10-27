@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import { appendFile, mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import {
 	type AgentToolContext,
 	type BasicLogger,
@@ -10,11 +11,13 @@ import {
 	ensureCompatibleLocalHubUrl,
 	type ITelemetryService,
 	NodeHubClient,
+	resolveClineDataDir,
 	type RuntimeCapabilities,
 	setHomeDirIfUnset,
 	type ToolApprovalRequest,
 	type ToolApprovalResult,
 } from "@cline/core";
+import { rememberRecoverableLocalHubUrl } from "@cline/core/hub";
 import {
 	type AgentEvent,
 	HUB_CLIENT_TOOL_APPROVAL_CAPABILITY,
@@ -32,6 +35,7 @@ import {
 } from "./feature-flags";
 import { recordHubActivity } from "./hub-admin";
 import { sessionLogPath } from "./paths";
+import { migrateOriginalClineProfileIfNeeded } from "./profile-migration";
 import type {
 	LiveSession,
 	PendingAskQuestion,
@@ -1303,6 +1307,18 @@ export async function initializeSessionManager(
 		return;
 	}
 	setHomeDirIfUnset(homedir());
+	try {
+		const migrationResult = migrateOriginalClineProfileIfNeeded();
+		if (migrationResult.migratedSessions > 0) {
+			ctx.logger.info?.(
+				`[profile-migration] Safely imported ${migrationResult.migratedSessions} original Cline sessions into OPEN VERSE profile.`,
+			);
+		}
+	} catch (err) {
+		ctx.logger.warn?.("[profile-migration] Migration check skipped or failed:", err);
+	}
+	const { url: hubUrl, authToken: hubAuthToken } =
+		await resolveLocalHubEndpointAndToken(ctx);
 	const sessionManager = await ClineCore.create({
 		clientName: "cline-code",
 		backendMode: "hub",
@@ -1317,6 +1333,8 @@ export async function initializeSessionManager(
 		}),
 		hub: {
 			strategy: "require-hub",
+			endpoint: hubUrl,
+			authToken: hubAuthToken,
 			workspaceRoot: ctx.localWorkspaceRoot,
 			cwd: ctx.localWorkspaceRoot,
 			clientType: "code-sidecar",
@@ -1506,6 +1524,50 @@ export async function disconnectRemoteSessionRuntime(
 	}
 }
 
+export async function resolveLocalHubEndpointAndToken(
+	ctx: SidecarContext,
+	preferredUrl?: string,
+): Promise<{ url: string; authToken?: string }> {
+	const url =
+		preferredUrl?.trim() ||
+		(await ensureCompatibleLocalHubUrl({
+			strategy: "require-hub",
+			workspaceRoot: ctx.localWorkspaceRoot,
+			cwd: ctx.localWorkspaceRoot,
+		}));
+	if (!url) {
+		throw new Error("Unable to start or connect to the shared OPEN VERSE Hub.");
+	}
+
+	let authToken: string | undefined;
+	for (let attempt = 0; attempt < 10; attempt++) {
+		try {
+			const discoveryPath = join(
+				resolveClineDataDir(),
+				"locks",
+				"hub",
+				"production.json",
+			);
+			if (existsSync(discoveryPath)) {
+				const record = JSON.parse(readFileSync(discoveryPath, "utf-8"));
+				if (typeof record?.authToken === "string" && record.authToken.trim()) {
+					authToken = record.authToken.trim();
+					break;
+				}
+			}
+		} catch {
+			// best effort
+		}
+		await new Promise((r) => setTimeout(r, 400));
+	}
+
+	if (authToken) {
+		rememberRecoverableLocalHubUrl(url, authToken);
+	}
+
+	return { url, authToken };
+}
+
 export async function ensureSharedHubClient(
 	ctx: SidecarContext,
 	preferredUrl?: string,
@@ -1520,38 +1582,42 @@ export async function ensureSharedHubClient(
 	}
 
 	const initialization = (async () => {
-		const url =
-			preferredUrl?.trim() ||
-			(await ensureCompatibleLocalHubUrl({
-				strategy: "require-hub",
-				workspaceRoot: ctx.localWorkspaceRoot,
-				cwd: ctx.localWorkspaceRoot,
-			}));
-		if (!url) {
-			throw new Error("Unable to start or connect to the shared Cline Hub.");
-		}
+		const { url, authToken } = await resolveLocalHubEndpointAndToken(
+			ctx,
+			preferredUrl,
+		);
 
-		const client = new NodeHubClient({
-			url,
-			clientType: "code-sidecar-observer",
-			displayName: "Cline Desktop observer",
-			workspaceRoot: ctx.localWorkspaceRoot,
-			cwd: ctx.localWorkspaceRoot,
-		});
-		try {
-			await client.connect();
-			client.subscribe((event) => {
-				recordHubActivity(getSidecarContextOwner(ctx), event);
-				handleHubLiveEvent(
-					getEnvironmentContext(ctx, LOCAL_ENVIRONMENT_ID),
-					event,
-				);
-			});
-			return client;
-		} catch (error) {
-			await client.dispose().catch(() => undefined);
-			throw error;
+		let client: NodeHubClient | undefined;
+		let lastError: unknown;
+		for (let attempt = 0; attempt < 5; attempt++) {
+			try {
+				client = new NodeHubClient({
+					url,
+					authToken,
+					clientType: "code-sidecar-observer",
+					displayName: "OPEN VERSE Desktop observer",
+					workspaceRoot: ctx.localWorkspaceRoot,
+					cwd: ctx.localWorkspaceRoot,
+				});
+				await client.connect();
+				client.subscribe((event) => {
+					recordHubActivity(getSidecarContextOwner(ctx), event);
+					handleHubLiveEvent(
+						getEnvironmentContext(ctx, LOCAL_ENVIRONMENT_ID),
+						event,
+					);
+				});
+				return client;
+			} catch (error) {
+				lastError = error;
+				if (client) {
+					await client.dispose().catch(() => undefined);
+					client = undefined;
+				}
+				await new Promise((r) => setTimeout(r, 600));
+			}
 		}
+		throw lastError;
 	})().finally(() => {
 		hubClientInitialization.delete(ctx);
 	});

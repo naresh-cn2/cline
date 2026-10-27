@@ -139,4 +139,17 @@ describe("buildClineSystemPrompt mode instructions", () => {
 		});
 		expect(prompt).toBe("You are a custom agent.");
 	});
+
+	it("identifies as OPEN-VERSE and instructs welcoming the user to OPEN-VERSE", () => {
+		const actPrompt = buildClineSystemPrompt({ ...BASE_OPTIONS, mode: "act" });
+		expect(actPrompt).toContain("You are OPEN-VERSE");
+		expect(actPrompt).toContain("Welcome to OPEN-VERSE");
+		expect(actPrompt).toContain("Hi, welcome to OPEN-VERSE");
+		expect(actPrompt).not.toContain("You are Cline");
+
+		const yoloPrompt = buildClineSystemPrompt({ ...BASE_OPTIONS, mode: "yolo" });
+		expect(yoloPrompt).toContain("You are OPEN-VERSE");
+		expect(yoloPrompt).not.toContain("You are Cline");
+	});
 });
+

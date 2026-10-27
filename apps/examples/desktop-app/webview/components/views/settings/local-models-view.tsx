@@ -700,7 +700,7 @@ export function LocalModelsContent() {
 							type="button"
 						>
 							{action === "using" ? <Loader2 className="animate-spin" /> : null}
-							Use with Cline
+							Use with OPEN VERSE
 						</Button>
 					) : null}
 					{installedModel && showRunControls && !runningModel ? (
@@ -786,8 +786,8 @@ export function LocalModelsContent() {
 					<>
 						Run models on your own machine with Ollama or LM Studio. Download
 						one, then click{" "}
-						<span className="font-medium text-foreground">Use with Cline</span>{" "}
-						to switch Cline to it with the right settings.
+						<span className="font-medium text-foreground">Use with OPEN VERSE</span>{" "}
+						to switch OPEN VERSE to it with the right settings.
 					</>
 				}
 				meta={<InUseBadge section="Local Models" />}

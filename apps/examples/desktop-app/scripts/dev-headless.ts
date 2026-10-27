@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createServer } from "node:net";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 const approvalToken = randomUUID();
 const children: ReturnType<typeof Bun.spawn>[] = [];
@@ -44,13 +46,41 @@ process.on("SIGTERM", stopChildren);
 async function main(): Promise<void> {
 	const sidecarPort = await reserveAvailablePort();
 	const endpoint = `ws://127.0.0.1:${sidecarPort}/transport?approval_token=${approvalToken}`;
+	const openverseDir =
+		process.env.OPEN_VERSE_DIR?.trim() ||
+		process.env.CLINE_DIR?.trim() ||
+		join(homedir(), ".openverse");
+
+	const hubPort = process.env.CLINE_HUB_PORT?.trim() || "26736";
+
 	const sidecar = spawn(["bun", "run", "sidecar/index.ts"], {
 		CLINE_SIDECAR_APPROVAL_TOKEN: approvalToken,
 		CLINE_SIDECAR_PORT: String(sidecarPort),
+		OPEN_VERSE_DIR: openverseDir,
+		CLINE_DIR: openverseDir,
+		CLINE_HUB_PORT: hubPort,
+		CLINE_CODE_CLOUD_AGENTS: "1",
+		OPEN_VERSE_CLOUD_AGENTS: "1",
+		CLINE_BUILD_ENV: "production",
 	});
 	const web = spawn(
-		["bun", "run", "next", "dev", "webview", "-p", "3125", "--turbo"],
-		{ NEXT_PUBLIC_SIDECAR_WS_ENDPOINT: endpoint },
+		[
+			process.execPath.includes("node") ? process.execPath : "node",
+			"./node_modules/next/dist/bin/next",
+			"dev",
+			"webview",
+			"-p",
+			"3125",
+		],
+		{
+			NEXT_PUBLIC_SIDECAR_WS_ENDPOINT: endpoint,
+			OPEN_VERSE_DIR: openverseDir,
+			CLINE_DIR: openverseDir,
+			CLINE_HUB_PORT: hubPort,
+			CLINE_CODE_CLOUD_AGENTS: "1",
+			OPEN_VERSE_CLOUD_AGENTS: "1",
+			CLINE_BUILD_ENV: "production",
+		},
 	);
 
 	const exitCode = await Promise.race([sidecar.exited, web.exited]);

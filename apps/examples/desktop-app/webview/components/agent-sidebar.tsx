@@ -911,7 +911,7 @@ export function AgentSidebar({
 						>
 							<HoverCardTrigger asChild>
 								<button
-									aria-label="Cline home"
+									aria-label="OPEN VERSE home"
 									className={cn(
 										"flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
 										isCollapsed && "size-9",
@@ -952,12 +952,12 @@ export function AgentSidebar({
 											)}
 										/>
 										<span className="font-medium">
-											Cline Hub @{hubPort(hubStatus?.url ?? null) ?? "unknown"}
+											OPEN VERSE Hub @{hubPort(hubStatus?.url ?? null) ?? "unknown"}
 										</span>
 									</div>
 									{hubStatus && !hubStatus.connected && (
 										<p className="mt-1 text-[11px] text-destructive">
-											{hubStatus.error ?? "Cline Hub is not connected."}
+											{hubStatus.error ?? "OPEN VERSE Hub is not connected."}
 										</p>
 									)}
 								</div>
@@ -1035,7 +1035,7 @@ export function AgentSidebar({
 									"bg-surface-hover-lighter text-sidebar-foreground",
 							)}
 							onClick={() => openSettingsSection("Customize")}
-							title="Customize Cline with plugins, rules, and more"
+							title="Customize OPEN VERSE with plugins, rules, and more"
 							type="button"
 							variant="sidebarItem"
 						>

@@ -168,7 +168,7 @@ export function LocalModelIndicator({
 						<p className="text-sm text-muted-foreground">
 							{status.install?.installed
 								? `${name} is installed but not running.`
-								: `Cline can't reach ${name}.`}
+								: `OPEN VERSE can't reach ${name}.`}
 						</p>
 						{status.install?.installed && status.install.localServer ? (
 							<Button

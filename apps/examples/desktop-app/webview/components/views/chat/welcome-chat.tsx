@@ -16,6 +16,7 @@ import { useAccount } from "@/contexts/account-context";
 import { useWorkspace } from "@/contexts/workspace-context";
 import { isAgendaTaskExpired, useAgendaTasks } from "@/hooks/use-agenda-tasks";
 import { useClineSignIn } from "@/hooks/use-cline-sign-in";
+import { useOAuthDeviceInfo } from "@/hooks/use-oauth-user-code";
 import { openPersonalGitHubInstallUrl } from "@/lib/cline-integrations";
 import {
 	type CloudBranchListOptions,
@@ -35,6 +36,7 @@ import {
 	CloudOnboardingCard,
 	type CloudOnboardingVariant,
 } from "./cloud-onboarding";
+import { OpenVerseWordmark } from "./open-verse-wordmark";
 import { WelcomeWorkspaceControls } from "./welcome-workspace-controls";
 
 // Used only until the API's connectUrl arrives (or when it is blank), so a
@@ -141,6 +143,8 @@ export function WelcomeScreen({
 			await refreshAccount();
 		},
 	});
+	const { userCode: deviceUserCode, verificationUrl } =
+		useOAuthDeviceInfo(signingIn);
 	const [cloudSetup, setCloudSetup] = useState<CloudSetupState>({
 		status: "unknown",
 		connectUrl: FALLBACK_CONNECT_URL,
@@ -483,9 +487,16 @@ export function WelcomeScreen({
 			welcomeHeader={
 				<div className="cline-view-enter">
 					<h1 className="sr-only">What would you like to build?</h1>
-					<AgentWelcomeHero />
+					<div className="flex flex-col items-center justify-center">
+						<div className="-translate-y-8 transition-transform sm:-translate-y-12">
+							<AgentWelcomeHero />
+						</div>
+						<div className="mt-2 w-full flex justify-center sm:mt-4">
+							<OpenVerseWordmark />
+						</div>
+					</div>
 
-					<div className="mt-11 flex min-w-0 items-center gap-2">
+					<div className="mt-8 flex min-w-0 items-center gap-2">
 						{environmentSelector}
 						<WelcomeWorkspaceControls
 							cloudBranch={cloudBranch}
@@ -539,6 +550,8 @@ export function WelcomeScreen({
 							onRefresh={() => void checkCloudSetup()}
 							onSignIn={() => void signIn()}
 							signingIn={signingIn}
+							deviceUserCode={deviceUserCode}
+							verificationUrl={verificationUrl}
 							variant={cloudOnboardingVariant}
 						/>
 					</div>

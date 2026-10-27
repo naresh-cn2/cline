@@ -57,7 +57,7 @@ export function WhatsNewDialog({
 					style={{ background: HERO_BACKGROUND }}
 				>
 					<p className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[oklch(0.88_0.09_315)]">
-						What's new in Cline
+						What's new in OPEN VERSE
 					</p>
 					<DialogTitle className="mt-1.5 text-2xl font-semibold tracking-tight text-white">
 						{release.title}
@@ -143,7 +143,7 @@ function ConnectorsSpotlight({
 			</div>
 			<p className="text-sm leading-relaxed text-muted-foreground">
 				Gmail, Slack, Calendar, Linear, Notion, and hundreds more, in one click.
-				Cline pulls context from them and acts on your behalf.
+				OPEN VERSE pulls context from them and acts on your behalf.
 			</p>
 			{recipe ? (
 				<button

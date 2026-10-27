@@ -457,7 +457,7 @@ function openUrlInDefaultBrowser(url: string): Promise<void> {
 		platform === "darwin"
 			? spawn("open", [url], { stdio: "ignore", detached: true })
 			: platform === "win32"
-				? spawn("rundll32", ["url.dll,FileProtocolHandler", url], {
+				? spawn("explorer.exe", [url], {
 						stdio: "ignore",
 						detached: true,
 					})
@@ -3370,10 +3370,11 @@ export async function handleCommand(
 				owner: options?.connection,
 				// Push the device sign-in confirmation code so the webview can
 				// show it while the user confirms it in the browser.
-				onUserCode: (userCode) =>
+				onUserCode: (userCode, url) =>
 					broadcastEvent(ctx, "provider_oauth_user_code", {
 						provider: providerId,
 						userCode,
+						url,
 					}),
 			},
 		);

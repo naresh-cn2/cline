@@ -75,7 +75,7 @@ export function HubPanel() {
 			<div className="flex items-center justify-between gap-4">
 				<div className="min-w-0">
 					<h2 id="hub-heading" className="text-lg font-semibold">
-						Cline Hub
+						OPEN VERSE Hub
 					</h2>
 					{status ? (
 						<p className="mt-1 break-all font-mono text-xs text-muted-foreground">
@@ -173,7 +173,7 @@ export function HubPanel() {
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Restart Cline Hub?</AlertDialogTitle>
+						<AlertDialogTitle>Restart OPEN VERSE Hub?</AlertDialogTitle>
 						<AlertDialogDescription>
 							This stops the local hub and its active sessions, then starts a
 							fresh hub. Connected desktop, CLI, and VS Code clients will

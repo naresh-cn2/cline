@@ -159,15 +159,19 @@ export function resolveClineDir(): string {
 	if (CLINE_DIR) {
 		return CLINE_DIR;
 	}
+	const openverseDir = process.env.OPEN_VERSE_DIR?.trim();
+	if (openverseDir) {
+		return openverseDir;
+	}
 	const envDir = process.env.CLINE_DIR?.trim();
 	if (envDir) {
 		return envDir;
 	}
-	return join(HOME_DIR, ".cline");
+	return join(HOME_DIR, ".openverse");
 }
 
 export function resolveDocumentsClineDirectoryPath(): string {
-	return join(HOME_DIR, "Documents", "Cline");
+	return join(HOME_DIR, "Documents", "OPEN-VERSE");
 }
 
 type DocumentsExtensionName =
